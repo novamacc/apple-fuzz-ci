@@ -13,13 +13,25 @@ jobs:
     timeout-minutes: 350
     steps:
       - uses: actions/checkout@v4
+      - name: Setup LLVM
+        run: |
+          brew install llvm 2>&1 | tail -3
+          LLVM=/opt/homebrew/opt/llvm
+          echo "LLVM=$LLVM" >> $GITHUB_ENV
+          # Find the fuzzer lib
+          FUZZER_LIB=$(find $LLVM -name 'libclang_rt.fuzzer_osx.a' | head -1)
+          echo "FUZZER_LIB=$FUZZER_LIB" >> $GITHUB_ENV
+          echo "Found fuzzer lib: $FUZZER_LIB"
       - name: Build
         run: |
-          # Use Xcode's clang which has built-in fuzzer support
-          # -fsanitize=fuzzer uses Xcode's libFuzzer runtime
-          xcrun clang -g -O1 -fsanitize=fuzzer,address \
+          # Step 1: Compile .o with Homebrew LLVM (has fuzzer instrumentation)
+          $LLVM/bin/clang -c -g -O1 -fsanitize=fuzzer,address \
+            -o fuzz.o harnesses/imageio_thumbnail.m
+          # Step 2: Link with Apple's clang (compatible linker) + Homebrew's fuzzer lib
+          xcrun clang -g -O1 -fsanitize=address \
             -framework Foundation -framework ImageIO -framework CoreGraphics \
-            -o fuzz harnesses/imageio_thumbnail.m
+            -lstdc++ \
+            -o fuzz fuzz.o "$FUZZER_LIB"
       - name: Fuzz (5 hours)
         run: |
           mkdir -p findings
@@ -41,17 +53,21 @@ jobs:
     timeout-minutes: 350
     steps:
       - uses: actions/checkout@v4
+      - name: Setup LLVM
+        run: |
+          brew install llvm 2>&1 | tail -3
+          LLVM=/opt/homebrew/opt/llvm
+          echo "LLVM=$LLVM" >> $GITHUB_ENV
+          FUZZER_LIB=$(find $LLVM -name 'libclang_rt.fuzzer_osx.a' | head -1)
+          echo "FUZZER_LIB=$FUZZER_LIB" >> $GITHUB_ENV
       - name: Build
         run: |
-          xcrun clang -g -O1 -fsanitize=fuzzer,address \
-            -framework Foundation -framework ImageIO -framework CoreGraphics \
-            -o fuzz harnesses/imageio_generic.m
+          $LLVM/bin/clang -c -g -O1 -fsanitize=fuzzer,address -o fuzz.o harnesses/imageio_generic.m
+          xcrun clang -g -fsanitize=address -framework Foundation -framework ImageIO -framework CoreGraphics -lstdc++ -o fuzz fuzz.o "$FUZZER_LIB"
       - name: Fuzz
         run: |
           mkdir -p findings
-          ./fuzz -max_total_time=18000 -max_len=65536 -timeout=10 -rss_limit_mb=4096 \
-            -dict=dictionaries/imageio.dict -artifact_prefix=findings/ \
-            -print_final_stats=1 corpus/seeds/ 2>&1 | tee fuzz.log || true
+          ./fuzz -max_total_time=18000 -max_len=65536 -timeout=10 -rss_limit_mb=4096 -dict=dictionaries/imageio.dict -artifact_prefix=findings/ -print_final_stats=1 corpus/seeds/ 2>&1 | tee fuzz.log || true
       - name: Upload
         if: always()
         uses: actions/upload-artifact@v4
@@ -67,17 +83,21 @@ jobs:
     timeout-minutes: 350
     steps:
       - uses: actions/checkout@v4
+      - name: Setup LLVM
+        run: |
+          brew install llvm 2>&1 | tail -3
+          LLVM=/opt/homebrew/opt/llvm
+          echo "LLVM=$LLVM" >> $GITHUB_ENV
+          FUZZER_LIB=$(find $LLVM -name 'libclang_rt.fuzzer_osx.a' | head -1)
+          echo "FUZZER_LIB=$FUZZER_LIB" >> $GITHUB_ENV
       - name: Build
         run: |
-          xcrun clang -g -O1 -fsanitize=fuzzer,address \
-            -framework Foundation -framework ImageIO -framework CoreGraphics \
-            -o fuzz harnesses/imageio_raw.m
+          $LLVM/bin/clang -c -g -O1 -fsanitize=fuzzer,address -o fuzz.o harnesses/imageio_raw.m
+          xcrun clang -g -fsanitize=address -framework Foundation -framework ImageIO -framework CoreGraphics -lstdc++ -o fuzz fuzz.o "$FUZZER_LIB"
       - name: Fuzz
         run: |
           mkdir -p findings
-          ./fuzz -max_total_time=18000 -max_len=65536 -timeout=10 -rss_limit_mb=4096 \
-            -dict=dictionaries/imageio.dict -artifact_prefix=findings/ \
-            -print_final_stats=1 corpus/seeds/ 2>&1 | tee fuzz.log || true
+          ./fuzz -max_total_time=18000 -max_len=65536 -timeout=10 -rss_limit_mb=4096 -dict=dictionaries/imageio.dict -artifact_prefix=findings/ -print_final_stats=1 corpus/seeds/ 2>&1 | tee fuzz.log || true
       - name: Upload
         if: always()
         uses: actions/upload-artifact@v4
@@ -93,17 +113,21 @@ jobs:
     timeout-minutes: 350
     steps:
       - uses: actions/checkout@v4
+      - name: Setup LLVM
+        run: |
+          brew install llvm 2>&1 | tail -3
+          LLVM=/opt/homebrew/opt/llvm
+          echo "LLVM=$LLVM" >> $GITHUB_ENV
+          FUZZER_LIB=$(find $LLVM -name 'libclang_rt.fuzzer_osx.a' | head -1)
+          echo "FUZZER_LIB=$FUZZER_LIB" >> $GITHUB_ENV
       - name: Build
         run: |
-          xcrun clang -g -O1 -fsanitize=fuzzer,address \
-            -framework Foundation -framework CoreText -framework CoreGraphics \
-            -o fuzz harnesses/coretext_font.m
+          $LLVM/bin/clang -c -g -O1 -fsanitize=fuzzer,address -o fuzz.o harnesses/coretext_font.m
+          xcrun clang -g -fsanitize=address -framework Foundation -framework CoreText -framework CoreGraphics -lstdc++ -o fuzz fuzz.o "$FUZZER_LIB"
       - name: Fuzz
         run: |
           mkdir -p findings
-          ./fuzz -max_total_time=18000 -max_len=32768 -timeout=10 -rss_limit_mb=4096 \
-            -dict=dictionaries/font.dict -artifact_prefix=findings/ \
-            -print_final_stats=1 corpus/seeds/ 2>&1 | tee fuzz.log || true
+          ./fuzz -max_total_time=18000 -max_len=32768 -timeout=10 -rss_limit_mb=4096 -dict=dictionaries/font.dict -artifact_prefix=findings/ -print_final_stats=1 corpus/seeds/ 2>&1 | tee fuzz.log || true
       - name: Upload
         if: always()
         uses: actions/upload-artifact@v4
@@ -119,17 +143,21 @@ jobs:
     timeout-minutes: 350
     steps:
       - uses: actions/checkout@v4
+      - name: Setup LLVM
+        run: |
+          brew install llvm 2>&1 | tail -3
+          LLVM=/opt/homebrew/opt/llvm
+          echo "LLVM=$LLVM" >> $GITHUB_ENV
+          FUZZER_LIB=$(find $LLVM -name 'libclang_rt.fuzzer_osx.a' | head -1)
+          echo "FUZZER_LIB=$FUZZER_LIB" >> $GITHUB_ENV
       - name: Build
         run: |
-          xcrun clang -g -O1 -fsanitize=fuzzer,address \
-            -framework Foundation -framework AudioToolbox \
-            -o fuzz harnesses/coreaudio_codec.m
+          $LLVM/bin/clang -c -g -O1 -fsanitize=fuzzer,address -o fuzz.o harnesses/coreaudio_codec.m
+          xcrun clang -g -fsanitize=address -framework Foundation -framework AudioToolbox -lstdc++ -o fuzz fuzz.o "$FUZZER_LIB"
       - name: Fuzz
         run: |
           mkdir -p findings
-          ./fuzz -max_total_time=18000 -max_len=8192 -timeout=10 -rss_limit_mb=4096 \
-            -dict=dictionaries/audio.dict -artifact_prefix=findings/ \
-            -print_final_stats=1 corpus/seeds/ 2>&1 | tee fuzz.log || true
+          ./fuzz -max_total_time=18000 -max_len=8192 -timeout=10 -rss_limit_mb=4096 -dict=dictionaries/audio.dict -artifact_prefix=findings/ -print_final_stats=1 corpus/seeds/ 2>&1 | tee fuzz.log || true
       - name: Upload
         if: always()
         uses: actions/upload-artifact@v4
@@ -145,17 +173,21 @@ jobs:
     timeout-minutes: 350
     steps:
       - uses: actions/checkout@v4
+      - name: Setup LLVM
+        run: |
+          brew install llvm 2>&1 | tail -3
+          LLVM=/opt/homebrew/opt/llvm
+          echo "LLVM=$LLVM" >> $GITHUB_ENV
+          FUZZER_LIB=$(find $LLVM -name 'libclang_rt.fuzzer_osx.a' | head -1)
+          echo "FUZZER_LIB=$FUZZER_LIB" >> $GITHUB_ENV
       - name: Build
         run: |
-          xcrun clang -g -O1 -fsanitize=fuzzer,address \
-            -framework Foundation -framework CoreGraphics \
-            -o fuzz harnesses/coregraphics_pdf.m
+          $LLVM/bin/clang -c -g -O1 -fsanitize=fuzzer,address -o fuzz.o harnesses/coregraphics_pdf.m
+          xcrun clang -g -fsanitize=address -framework Foundation -framework CoreGraphics -lstdc++ -o fuzz fuzz.o "$FUZZER_LIB"
       - name: Fuzz
         run: |
           mkdir -p findings
-          ./fuzz -max_total_time=18000 -max_len=65536 -timeout=10 -rss_limit_mb=4096 \
-            -dict=dictionaries/pdf.dict -artifact_prefix=findings/ \
-            -print_final_stats=1 corpus/seeds/ 2>&1 | tee fuzz.log || true
+          ./fuzz -max_total_time=18000 -max_len=65536 -timeout=10 -rss_limit_mb=4096 -dict=dictionaries/pdf.dict -artifact_prefix=findings/ -print_final_stats=1 corpus/seeds/ 2>&1 | tee fuzz.log || true
       - name: Upload
         if: always()
         uses: actions/upload-artifact@v4
