@@ -1,0 +1,239 @@
+#
+# font.dict - libFuzzer dictionary for CoreText font fuzzing
+# Covers: TrueType, OpenType, WOFF, WOFF2, AAT
+# Target: fontd (no sandbox, Full Disk Access)
+#
+
+# ============================================
+# File format signatures
+# ============================================
+# TrueType (sfVersion 1.0)
+tt_magic="\x00\x01\x00\x00"
+# OpenType with CFF
+ot_magic="OTTO"
+# TrueType collection
+ttc_magic="ttcf"
+# WOFF 1.0
+woff_magic="wOFF"
+# WOFF 2.0
+woff2_magic="wOF2"
+# Apple dfont resource fork header
+dfont_magic="\x00\x00\x01\x00"
+
+# ============================================
+# Required tables (every valid font has these)
+# ============================================
+tbl_cmap="cmap"
+tbl_head="head"
+tbl_hhea="hhea"
+tbl_hmtx="hmtx"
+tbl_maxp="maxp"
+tbl_name="name"
+tbl_os2="OS/2"
+tbl_post="post"
+
+# ============================================
+# TrueType outline tables
+# ============================================
+tbl_glyf="glyf"
+tbl_loca="loca"
+tbl_cvt="cvt "
+tbl_fpgm="fpgm"
+tbl_prep="prep"
+tbl_gasp="gasp"
+
+# ============================================
+# CFF outline tables
+# ============================================
+tbl_cff="CFF "
+tbl_cff2="CFF2"
+tbl_vorg="VORG"
+
+# ============================================
+# OpenType layout tables (complex shaping)
+# ============================================
+tbl_gsub="GSUB"
+tbl_gpos="GPOS"
+tbl_gdef="GDEF"
+tbl_base="BASE"
+tbl_jstf="JSTF"
+tbl_math="MATH"
+
+# ============================================
+# Apple AAT tables (Apple-specific, heavily used by CoreText)
+# ============================================
+tbl_morx="morx"
+tbl_mort="mort"
+tbl_kerx="kerx"
+tbl_kern="kern"
+tbl_feat="feat"
+tbl_trak="trak"
+tbl_prop="prop"
+tbl_bsln="bsln"
+tbl_opbd="opbd"
+tbl_lcar="lcar"
+tbl_just="just"
+tbl_ankr="ankr"
+tbl_acnt="acnt"
+tbl_fdsc="fdsc"
+tbl_fmtx="fmtx"
+tbl_ltag="ltag"
+tbl_gcid="gcid"
+tbl_xref="xref"
+tbl_zapf="Zapf"
+tbl_bhed="bhed"
+
+# ============================================
+# Bitmap/color font tables
+# ============================================
+tbl_cbdt="CBDT"
+tbl_cblc="CBLC"
+tbl_ebdt="EBDT"
+tbl_eblc="EBLC"
+tbl_ebsc="EBSC"
+tbl_sbix="sbix"
+tbl_svg="SVG "
+tbl_colr="COLR"
+tbl_cpal="CPAL"
+
+# ============================================
+# Variable font tables (Apple co-authored spec)
+# ============================================
+tbl_fvar="fvar"
+tbl_gvar="gvar"
+tbl_avar="avar"
+tbl_cvar="cvar"
+tbl_hvar="HVAR"
+tbl_mvar="MVAR"
+tbl_stat="STAT"
+
+# ============================================
+# Vertical layout tables
+# ============================================
+tbl_vhea="vhea"
+tbl_vmtx="vmtx"
+
+# ============================================
+# Other tables
+# ============================================
+tbl_dsig="DSIG"
+tbl_hdmx="hdmx"
+tbl_ltsh="LTSH"
+tbl_pclt="PCLT"
+tbl_vdmx="VDMX"
+tbl_meta="meta"
+
+# ============================================
+# TrueType instruction opcodes (especially Apple-specific)
+# ============================================
+# GETINFO (Apple extension: returns OS/platform info)
+tt_getinfo="\x91"
+# INSTCTRL (instruction control - Apple security-sensitive)
+tt_instctrl="\x8e"
+# IDEF (instruction definition)
+tt_idef="\x89"
+# FDEF (function definition)
+tt_fdef="\x2c"
+# ENDF (end function)
+tt_endf="\x2d"
+# CALL
+tt_call="\x2b"
+# LOOPCALL
+tt_loopcall="\x2a"
+# IF
+tt_if="\x58"
+# ELSE
+tt_else="\x1b"
+# EIF
+tt_eif="\x59"
+# JROT (jump relative on true)
+tt_jrot="\x78"
+# JROF (jump relative on false)
+tt_jrof="\x79"
+# PUSHB
+tt_pushb1="\xb0"
+tt_pushb8="\xb7"
+# PUSHW
+tt_pushw1="\xb8"
+tt_pushw8="\xbf"
+# NPUSHB
+tt_npushb="\x40"
+# NPUSHW
+tt_npushw="\x41"
+# SCANTYPE (Apple extension)
+tt_scantype="\x8d"
+# SCANCTRL
+tt_scanctrl="\x85"
+# GETVARIATION (Apple variation extension)
+tt_getvariation="\x91"
+# DELTAP1/2/3 (delta exception instructions)
+tt_deltap1="\x5d"
+tt_deltap2="\x71"
+tt_deltap3="\x72"
+# DELTAC1/2/3
+tt_deltac1="\x73"
+tt_deltac2="\x74"
+tt_deltac3="\x75"
+# SRP0/1/2 (set reference point)
+tt_srp0="\x10"
+tt_srp1="\x11"
+tt_srp2="\x12"
+# SMD (set minimum distance)
+tt_smd="\x1a"
+# MPPEM (measure pixels per em)
+tt_mppem="\x4b"
+# MPS (measure point size)
+tt_mps="\x4c"
+
+# ============================================
+# head table magic number
+# ============================================
+head_magic="\x5f\x0f\x3c\xf5"
+
+# ============================================
+# name table platform/encoding IDs
+# ============================================
+name_mac="\x00\x01"
+name_win="\x00\x03"
+name_unicode="\x00\x00"
+
+# ============================================
+# cmap format types
+# ============================================
+cmap_fmt0="\x00\x00"
+cmap_fmt2="\x00\x02"
+cmap_fmt4="\x00\x04"
+cmap_fmt6="\x00\x06"
+cmap_fmt12="\x00\x0c"
+cmap_fmt13="\x00\x0d"
+cmap_fmt14="\x00\x0e"
+
+# ============================================
+# morx/mort state machine types (Apple AAT - crash-heavy)
+# ============================================
+morx_rearrangement="\x00\x00\x00\x00"
+morx_contextual="\x00\x00\x00\x01"
+morx_ligature="\x00\x00\x00\x02"
+morx_noncontextual="\x00\x00\x00\x04"
+morx_insertion="\x00\x00\x00\x05"
+
+# ============================================
+# WOFF header fields
+# ============================================
+woff_sig="wOFF"
+woff2_sig="wOF2"
+# WOFF totalSfntSize hint for buffer allocation
+woff_sfnt_size="\x00\x01\x00\x00"
+
+# ============================================
+# Interesting numeric values
+# ============================================
+zero_16="\x00\x00"
+zero_32="\x00\x00\x00\x00"
+max_16="\xff\xff"
+max_32="\xff\xff\xff\xff"
+one_16="\x00\x01"
+large_offset="\x00\x0f\xff\xff"
+neg_one_16="\xff\xff"
+overflow_16="\x80\x00"
+overflow_32="\x80\x00\x00\x00"

@@ -1,0 +1,244 @@
+#
+# audio.dict - libFuzzer dictionary for CoreAudio / AudioToolbox fuzzing
+# Covers: AMR, AAC/ADTS, AIFF, WAV, FLAC, CAF, MP4/M4A, MP3, ALAC
+# Target: coreaudiod / mediaserverd
+#
+
+# ============================================
+# AMR (Adaptive Multi-Rate)
+# ============================================
+amr_magic="#!AMR\x0a"
+amr_wb_magic="#!AMR-WB\x0a"
+# AMR frame header (good frame, 12.2kbps mode)
+amr_frame_hdr="\x3c"
+
+# ============================================
+# AAC ADTS (Audio Data Transport Stream)
+# ============================================
+# MPEG-4 AAC-LC, 44100Hz, stereo
+aac_adts_sync="\xff\xf1"
+# MPEG-2 AAC-LC
+aac_adts_mpeg2="\xff\xf9"
+# ADTS frame: AAC-LC profile, 44100Hz, stereo
+aac_adts_frame="\xff\xf1\x50\x80"
+# AAC-HE profile
+aac_he="\xff\xf1\x68"
+# AAC-LD
+aac_ld="\xff\xf1\x58"
+# SBR (Spectral Band Replication) header
+aac_sbr="\x56\xe5"
+
+# ============================================
+# AIFF (Audio Interchange File Format)
+# ============================================
+aiff_form="FORM"
+aiff_magic="AIFF"
+aiff_aifc="AIFC"
+aiff_comm="COMM"
+aiff_ssnd="SSND"
+aiff_mark="MARK"
+aiff_inst="INST"
+aiff_comt="COMT"
+aiff_name="NAME"
+aiff_auth="AUTH"
+aiff_anno="ANNO"
+# AIFF-C compression types
+aifc_none="NONE"
+aifc_sowt="sowt"
+aifc_twos="twos"
+aifc_fl32="fl32"
+aifc_fl64="fl64"
+aifc_alaw="alaw"
+aifc_ulaw="ulaw"
+aifc_ima4="ima4"
+aifc_alac="alac"
+
+# ============================================
+# WAV (RIFF WAVE)
+# ============================================
+wav_riff="RIFF"
+wav_magic="WAVE"
+wav_fmt="fmt "
+wav_data="data"
+wav_fact="fact"
+wav_cue="cue "
+wav_list="LIST"
+wav_info="INFO"
+wav_bext="bext"
+wav_ixml="iXML"
+wav_smpl="smpl"
+# PCM format tag
+wav_pcm="\x01\x00"
+# IEEE float
+wav_float="\x03\x00"
+# A-law
+wav_alaw="\x06\x00"
+# u-law
+wav_ulaw="\x07\x00"
+# IMA ADPCM
+wav_ima_adpcm="\x11\x00"
+# GSM 6.10
+wav_gsm="\x31\x00"
+# Extensible format
+wav_extensible="\xfe\xff"
+# Common sample rates (LE 32-bit)
+wav_44100="\x44\xac\x00\x00"
+wav_48000="\x80\xbb\x00\x00"
+wav_96000="\x00\x77\x01\x00"
+wav_22050="\x22\x56\x00\x00"
+wav_8000="\x40\x1f\x00\x00"
+
+# ============================================
+# FLAC (Free Lossless Audio Codec)
+# ============================================
+flac_magic="fLaC"
+# STREAMINFO block (mandatory, type 0)
+flac_streaminfo="\x00"
+flac_last_streaminfo="\x80"
+# PADDING block
+flac_padding="\x01"
+# APPLICATION block
+flac_application="\x02"
+# SEEKTABLE block
+flac_seektable="\x03"
+# VORBIS_COMMENT block
+flac_vorbiscomment="\x04"
+# CUESHEET block
+flac_cuesheet="\x05"
+# PICTURE block
+flac_picture="\x06"
+# Frame sync code
+flac_frame_sync="\xff\xf8"
+flac_frame_sync_var="\xff\xf9"
+
+# ============================================
+# CAF (Core Audio Format - Apple native)
+# ============================================
+caf_magic="caff"
+caf_version="\x00\x01"
+# Chunk types
+caf_desc="desc"
+caf_data="data"
+caf_pakt="pakt"
+caf_kuki="kuki"
+caf_info="info"
+caf_chan="chan"
+caf_mark="mark"
+caf_regn="regn"
+caf_strg="strg"
+caf_umid="umid"
+caf_free="free"
+caf_midi="midi"
+caf_ovvw="ovvw"
+caf_peak="peak"
+caf_edit="edit"
+# CAF audio format IDs
+caf_lpcm="lpcm"
+caf_alac="alac"
+caf_aac="aac "
+caf_mp3=".mp3"
+caf_opus="opus"
+caf_ilbc="ilbc"
+caf_ima4="ima4"
+caf_ulaw="ulaw"
+caf_alaw="alaw"
+
+# ============================================
+# MP4 / M4A container (ISOBMFF)
+# ============================================
+mp4_ftyp="ftyp"
+mp4_moov="moov"
+mp4_mdat="mdat"
+mp4_mvhd="mvhd"
+mp4_trak="trak"
+mp4_tkhd="tkhd"
+mp4_mdia="mdia"
+mp4_mdhd="mdhd"
+mp4_hdlr="hdlr"
+mp4_minf="minf"
+mp4_smhd="smhd"
+mp4_dinf="dinf"
+mp4_dref="dref"
+mp4_stbl="stbl"
+mp4_stsd="stsd"
+mp4_stts="stts"
+mp4_stsc="stsc"
+mp4_stsz="stsz"
+mp4_stco="stco"
+mp4_co64="co64"
+mp4_ctts="ctts"
+mp4_stss="stss"
+mp4_sgpd="sgpd"
+mp4_sbgp="sbgp"
+mp4_edts="edts"
+mp4_elst="elst"
+mp4_udta="udta"
+mp4_meta="meta"
+mp4_free="free"
+mp4_skip="skip"
+# M4A brand types
+m4a_m4a="M4A "
+m4a_mp41="mp41"
+m4a_mp42="mp42"
+m4a_isom="isom"
+m4a_dash="dash"
+# Audio codecs in stsd
+mp4_mp4a="mp4a"
+mp4_alac="alac"
+mp4_ac3="ac-3"
+mp4_ec3="ec-3"
+mp4_opus="Opus"
+mp4_flac="fLaC"
+# esds (Elementary Stream Descriptor)
+mp4_esds="esds"
+# Sound handler
+mp4_soun="soun"
+
+# ============================================
+# MP3
+# ============================================
+# MPEG1 Layer3 sync
+mp3_sync="\xff\xfb"
+# MPEG2 Layer3
+mp3_sync2="\xff\xf3"
+# MPEG2.5 Layer3
+mp3_sync25="\xff\xe3"
+# ID3v2 header
+mp3_id3="ID3"
+# Xing/LAME header
+mp3_xing="Xing"
+mp3_info="Info"
+mp3_lame="LAME"
+
+# ============================================
+# ALAC (Apple Lossless Audio Codec)
+# ============================================
+alac_magic="alac"
+# ALAC specific config (36 bytes)
+alac_config_size="\x00\x00\x00\x24"
+
+# ============================================
+# Opus
+# ============================================
+opus_head="OpusHead"
+opus_tags="OpusTags"
+# Ogg container
+ogg_magic="OggS"
+
+# ============================================
+# Interesting values
+# ============================================
+# Channel counts (LE 16-bit)
+ch_mono="\x01\x00"
+ch_stereo="\x02\x00"
+ch_51="\x06\x00"
+ch_71="\x08\x00"
+# Bit depths (LE 16-bit)
+bits_8="\x08\x00"
+bits_16="\x10\x00"
+bits_24="\x18\x00"
+bits_32="\x20\x00"
+# Large values for overflow
+overflow_32="\xff\xff\xff\xff"
+overflow_size="\x7f\xff\xff\xff"
+zero_32="\x00\x00\x00\x00"

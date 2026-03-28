@@ -1,0 +1,250 @@
+name: Apple Fuzzing
+
+on:
+  schedule:
+    # Run every 6 hours (max job duration is 6hrs on free tier)
+    - cron: '0 */6 * * *'
+  workflow_dispatch:  # Manual trigger
+
+jobs:
+  fuzz-imageio-thumbnail:
+    runs-on: macos-14  # M1 runner
+    timeout-minutes: 350  # ~5.8 hours
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install LLVM
+        run: brew install llvm
+      - name: Build harness
+        run: |
+          /opt/homebrew/opt/llvm/bin/clang -g -O1 -fsanitize=fuzzer,address,undefined \
+            -framework Foundation -framework ImageIO -framework CoreGraphics \
+            -o fuzz_imageio_thumbnail harnesses/imageio_thumbnail.m
+      - name: Fuzz (5 hours)
+        run: |
+          mkdir -p findings
+          ./fuzz_imageio_thumbnail \
+            -max_total_time=18000 \
+            -max_len=65536 \
+            -timeout=10 \
+            -rss_limit_mb=4096 \
+            -dict=dictionaries/imageio.dict \
+            -artifact_prefix=findings/ \
+            -print_final_stats=1 \
+            corpus/seeds/ 2>&1 | tee fuzz.log
+      - name: Check for crashes
+        if: always()
+        run: |
+          echo "=== Crash artifacts ==="
+          ls -la findings/crash-* findings/timeout-* findings/oom-* 2>/dev/null || echo "No crashes"
+          echo "=== Final stats ==="
+          tail -20 fuzz.log
+      - name: Upload crashes
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: thumbnail-crashes-${{ github.run_number }}
+          path: |
+            findings/crash-*
+            findings/timeout-*
+            fuzz.log
+          if-no-files-found: ignore
+
+  fuzz-imageio-generic:
+    runs-on: macos-14
+    timeout-minutes: 350
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install LLVM
+        run: brew install llvm
+      - name: Build harness
+        run: |
+          /opt/homebrew/opt/llvm/bin/clang -g -O1 -fsanitize=fuzzer,address,undefined \
+            -framework Foundation -framework ImageIO -framework CoreGraphics \
+            -o fuzz_imageio_generic harnesses/imageio_generic.m
+      - name: Fuzz (5 hours)
+        run: |
+          mkdir -p findings
+          ./fuzz_imageio_generic \
+            -max_total_time=18000 \
+            -max_len=65536 \
+            -timeout=10 \
+            -rss_limit_mb=4096 \
+            -dict=dictionaries/imageio.dict \
+            -artifact_prefix=findings/ \
+            -print_final_stats=1 \
+            corpus/seeds/ 2>&1 | tee fuzz.log
+      - name: Check for crashes
+        if: always()
+        run: |
+          ls -la findings/crash-* findings/timeout-* 2>/dev/null || echo "No crashes"
+          tail -20 fuzz.log
+      - name: Upload crashes
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: generic-crashes-${{ github.run_number }}
+          path: |
+            findings/crash-*
+            findings/timeout-*
+            fuzz.log
+          if-no-files-found: ignore
+
+  fuzz-imageio-raw:
+    runs-on: macos-14
+    timeout-minutes: 350
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install LLVM
+        run: brew install llvm
+      - name: Build harness
+        run: |
+          /opt/homebrew/opt/llvm/bin/clang -g -O1 -fsanitize=fuzzer,address,undefined \
+            -framework Foundation -framework ImageIO -framework CoreGraphics \
+            -o fuzz_imageio_raw harnesses/imageio_raw.m
+      - name: Fuzz (5 hours)
+        run: |
+          mkdir -p findings
+          ./fuzz_imageio_raw \
+            -max_total_time=18000 \
+            -max_len=65536 \
+            -timeout=10 \
+            -rss_limit_mb=4096 \
+            -dict=dictionaries/imageio.dict \
+            -artifact_prefix=findings/ \
+            -print_final_stats=1 \
+            corpus/seeds/ 2>&1 | tee fuzz.log
+      - name: Check for crashes
+        if: always()
+        run: |
+          ls -la findings/crash-* findings/timeout-* 2>/dev/null || echo "No crashes"
+          tail -20 fuzz.log
+      - name: Upload crashes
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: raw-crashes-${{ github.run_number }}
+          path: |
+            findings/crash-*
+            findings/timeout-*
+            fuzz.log
+          if-no-files-found: ignore
+
+  fuzz-coretext-font:
+    runs-on: macos-14
+    timeout-minutes: 350
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install LLVM
+        run: brew install llvm
+      - name: Build harness
+        run: |
+          /opt/homebrew/opt/llvm/bin/clang -g -O1 -fsanitize=fuzzer,address,undefined \
+            -framework Foundation -framework CoreText -framework CoreGraphics \
+            -o fuzz_coretext_font harnesses/coretext_font.m
+      - name: Fuzz (5 hours)
+        run: |
+          mkdir -p findings
+          ./fuzz_coretext_font \
+            -max_total_time=18000 \
+            -max_len=32768 \
+            -timeout=10 \
+            -rss_limit_mb=4096 \
+            -dict=dictionaries/font.dict \
+            -artifact_prefix=findings/ \
+            -print_final_stats=1 \
+            corpus/seeds/ 2>&1 | tee fuzz.log
+      - name: Check for crashes
+        if: always()
+        run: |
+          ls -la findings/crash-* findings/timeout-* 2>/dev/null || echo "No crashes"
+          tail -20 fuzz.log
+      - name: Upload crashes
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: font-crashes-${{ github.run_number }}
+          path: |
+            findings/crash-*
+            findings/timeout-*
+            fuzz.log
+          if-no-files-found: ignore
+
+  fuzz-coreaudio-codec:
+    runs-on: macos-14
+    timeout-minutes: 350
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install LLVM
+        run: brew install llvm
+      - name: Build harness
+        run: |
+          /opt/homebrew/opt/llvm/bin/clang -g -O1 -fsanitize=fuzzer,address,undefined \
+            -framework Foundation -framework AudioToolbox \
+            -o fuzz_coreaudio_codec harnesses/coreaudio_codec.m
+      - name: Fuzz (5 hours)
+        run: |
+          mkdir -p findings
+          ./fuzz_coreaudio_codec \
+            -max_total_time=18000 \
+            -max_len=8192 \
+            -timeout=10 \
+            -rss_limit_mb=4096 \
+            -dict=dictionaries/audio.dict \
+            -artifact_prefix=findings/ \
+            -print_final_stats=1 \
+            corpus/seeds/ 2>&1 | tee fuzz.log
+      - name: Check for crashes
+        if: always()
+        run: |
+          ls -la findings/crash-* findings/timeout-* 2>/dev/null || echo "No crashes"
+          tail -20 fuzz.log
+      - name: Upload crashes
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: audio-crashes-${{ github.run_number }}
+          path: |
+            findings/crash-*
+            findings/timeout-*
+            fuzz.log
+          if-no-files-found: ignore
+
+  fuzz-coregraphics-pdf:
+    runs-on: macos-14
+    timeout-minutes: 350
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install LLVM
+        run: brew install llvm
+      - name: Build harness
+        run: |
+          /opt/homebrew/opt/llvm/bin/clang -g -O1 -fsanitize=fuzzer,address,undefined \
+            -framework Foundation -framework CoreGraphics \
+            -o fuzz_coregraphics_pdf harnesses/coregraphics_pdf.m
+      - name: Fuzz (5 hours)
+        run: |
+          mkdir -p findings
+          ./fuzz_coregraphics_pdf \
+            -max_total_time=18000 \
+            -max_len=65536 \
+            -timeout=10 \
+            -rss_limit_mb=4096 \
+            -dict=dictionaries/pdf.dict \
+            -artifact_prefix=findings/ \
+            -print_final_stats=1 \
+            corpus/seeds/ 2>&1 | tee fuzz.log
+      - name: Check for crashes
+        if: always()
+        run: |
+          ls -la findings/crash-* findings/timeout-* 2>/dev/null || echo "No crashes"
+          tail -20 fuzz.log
+      - name: Upload crashes
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: pdf-crashes-${{ github.run_number }}
+          path: |
+            findings/crash-*
+            findings/timeout-*
+            fuzz.log
+          if-no-files-found: ignore

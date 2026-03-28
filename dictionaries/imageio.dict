@@ -1,0 +1,382 @@
+#
+# imageio.dict - libFuzzer dictionary for Apple ImageIO fuzzing
+# Covers: JPEG, PNG, GIF, TIFF, BMP, WebP, HEIF/AVIF, PSD, OpenEXR,
+#         DNG, JBIG2, KTX, ICO, TGA, PBM, ASTC, JP2, ICNS, DDS, PVR,
+#         SVG, plus EXIF/ICC metadata structures
+#
+
+# ============================================
+# JPEG
+# ============================================
+# Magic bytes
+jpeg_magic="\xff\xd8\xff"
+# SOI (Start of Image)
+jpeg_soi="\xff\xd8"
+# APP0 (JFIF)
+jpeg_app0="\xff\xe0"
+# APP1 (EXIF)
+jpeg_app1="\xff\xe1"
+# APP2 (ICC)
+jpeg_app2="\xff\xe2"
+# SOF0 (Baseline DCT)
+jpeg_sof0="\xff\xc0"
+# SOF1 (Extended Sequential DCT)
+jpeg_sof1="\xff\xc1"
+# SOF2 (Progressive DCT)
+jpeg_sof2="\xff\xc2"
+# SOF3 (Lossless)
+jpeg_sof3="\xff\xc3"
+# SOS (Start of Scan)
+jpeg_sos="\xff\xda"
+# DQT (Define Quantization Table)
+jpeg_dqt="\xff\xdb"
+# DHT (Define Huffman Table)
+jpeg_dht="\xff\xc4"
+# DRI (Define Restart Interval)
+jpeg_dri="\xff\xdd"
+# RST0-RST7
+jpeg_rst0="\xff\xd0"
+jpeg_rst7="\xff\xd7"
+# COM (Comment)
+jpeg_com="\xff\xfe"
+# EOI (End of Image)
+jpeg_eoi="\xff\xd9"
+# JPEG 2000 signature
+jp2_magic="\x00\x00\x00\x0c\x6a\x50\x20\x20\x0d\x0a\x87\x0a"
+jp2_ftyp="jp2 "
+jp2_jp2h="jp2h"
+jp2_ihdr="ihdr"
+jp2_colr="colr"
+jp2_jp2c="jp2c"
+jp2_codestream="\xff\x4f\xff\x51"
+
+# ============================================
+# PNG
+# ============================================
+png_magic="\x89\x50\x4e\x47\x0d\x0a\x1a\x0a"
+png_ihdr="IHDR"
+png_plte="PLTE"
+png_idat="IDAT"
+png_iend="IEND"
+png_trns="tRNS"
+png_chrm="cHRM"
+png_gama="gAMA"
+png_iccp="iCCP"
+png_sbit="sBIT"
+png_srgb="sRGB"
+png_text="tEXt"
+png_ztxt="zTXt"
+png_itxt="iTXt"
+png_bkgd="bKGD"
+png_hist="hIST"
+png_phys="pHYs"
+png_time="tIME"
+png_actl="acTL"
+png_fctl="fcTL"
+png_fdat="fdAT"
+png_exif="eXIf"
+# CgBI - Apple's proprietary PNG variant
+png_cgbi="CgBI"
+
+# ============================================
+# GIF
+# ============================================
+gif89a_magic="GIF89a"
+gif87a_magic="GIF87a"
+gif_trailer="\x3b"
+gif_image_sep="\x2c"
+gif_ext_intro="\x21"
+gif_gce="\x21\xf9"
+gif_comment="\x21\xfe"
+gif_app_ext="\x21\xff"
+gif_netscape="NETSCAPE2.0"
+
+# ============================================
+# TIFF / DNG
+# ============================================
+# Little-endian TIFF
+tiff_le="\x49\x49\x2a\x00"
+# Big-endian TIFF
+tiff_be="\x4d\x4d\x00\x2a"
+# BigTIFF little-endian
+bigtiff_le="\x49\x49\x2b\x00"
+# BigTIFF big-endian
+bigtiff_be="\x4d\x4d\x00\x2b"
+# TIFF IFD tags (little-endian 16-bit tag IDs)
+tiff_imagewidth="\x00\x01"
+tiff_imagelength="\x01\x01"
+tiff_bitspersample="\x02\x01"
+tiff_compression="\x03\x01"
+tiff_photometric="\x06\x01"
+tiff_stripoffsets="\x11\x01"
+tiff_samplesperpixel="\x15\x01"
+tiff_rowsperstrip="\x16\x01"
+tiff_stripbytecounts="\x17\x01"
+tiff_xresolution="\x1a\x01"
+tiff_yresolution="\x1b\x01"
+tiff_planarconfig="\x1c\x01"
+tiff_resolutionunit="\x28\x01"
+tiff_tilewidth="\x42\x01"
+tiff_tilelength="\x43\x01"
+tiff_tileoffsets="\x44\x01"
+tiff_tilebytecounts="\x45\x01"
+tiff_subifd="\x4f\x01"
+tiff_extrasamples="\x52\x01"
+# TIFF tag strings
+tiff_s_samplesperpixel="SamplesPerPixel"
+tiff_s_bitspersample="BitsPerSample"
+tiff_s_photometric="PhotometricInterpretation"
+tiff_s_compression="Compression"
+tiff_s_imagewidth="ImageWidth"
+tiff_s_imagelength="ImageLength"
+# DNG-specific tags
+dng_version_tag="\x00\xc6"
+dng_backward_tag="\x01\xc6"
+dng_unique_camera="\x10\xc6"
+dng_colormatrix1="\x21\xc6"
+dng_colormatrix2="\x22\xc6"
+dng_camera_calibration="\x23\xc6"
+dng_analog_balance="\x27\xc6"
+dng_as_shot_neutral="\x28\xc6"
+dng_baseline_exposure="\x2c\xc6"
+dng_s_version="DNGVersion"
+dng_s_unique_camera="UniqueCameraModel"
+dng_s_colormatrix1="ColorMatrix1"
+# DNG Opcode lists (common crash vectors)
+dng_opcode1="\x6f\xc7"
+dng_opcode2="\x70\xc7"
+dng_opcode3="\x71\xc7"
+
+# ============================================
+# BMP
+# ============================================
+bmp_magic="BM"
+bmp_ba="BA"
+# BITMAPINFOHEADER size (40 bytes)
+bmp_info_hdr="\x28\x00\x00\x00"
+# BITMAPV4HEADER size (108 bytes)
+bmp_v4_hdr="\x6c\x00\x00\x00"
+# BITMAPV5HEADER size (124 bytes)
+bmp_v5_hdr="\x7c\x00\x00\x00"
+# OS/2 header size (12 bytes)
+bmp_os2_hdr="\x0c\x00\x00\x00"
+
+# ============================================
+# WebP
+# ============================================
+webp_riff="RIFF"
+webp_magic="WEBP"
+webp_vp8="VP8 "
+webp_vp8l="VP8L"
+webp_vp8x="VP8X"
+webp_anim="ANIM"
+webp_anmf="ANMF"
+webp_alph="ALPH"
+webp_iccp="ICCP"
+webp_exif="EXIF"
+webp_xmp="XMP "
+
+# ============================================
+# HEIF / HEIC / AVIF
+# ============================================
+heif_ftyp="ftyp"
+heif_ftypheic="ftypheic"
+heif_ftypavif="ftypavif"
+heif_ftypmif1="ftypmif1"
+heif_ftyphevx="ftyphevx"
+heif_ftyphevc="ftyphevc"
+heif_meta="meta"
+heif_hdlr="hdlr"
+heif_pitm="pitm"
+heif_iloc="iloc"
+heif_iinf="iinf"
+heif_iprp="iprp"
+heif_ipco="ipco"
+heif_ipma="ipma"
+heif_ispe="ispe"
+heif_colr="colr"
+heif_pixi="pixi"
+heif_hvcC="hvcC"
+heif_av1C="av1C"
+heif_iref="iref"
+heif_mdat="mdat"
+heif_moov="moov"
+heif_irot="irot"
+heif_imir="imir"
+heif_grid="grid"
+heif_pict="pict"
+heif_heic="heic"
+heif_avif="avif"
+heif_mif1="mif1"
+
+# ============================================
+# PSD (Adobe Photoshop)
+# ============================================
+psd_magic="8BPS"
+# PSD version 1
+psd_v1="\x00\x01"
+# PSB version 2 (large document)
+psd_v2="\x00\x02"
+
+# ============================================
+# OpenEXR
+# ============================================
+exr_magic="\x76\x2f\x31\x01"
+exr_channels="channels"
+exr_compression="compression"
+exr_datawindow="dataWindow"
+exr_displaywindow="displayWindow"
+exr_lineorder="lineOrder"
+exr_pixelaspectratio="pixelAspectRatio"
+exr_screenwindowcenter="screenWindowCenter"
+exr_screenwindowwidth="screenWindowWidth"
+exr_half="\x01\x00"
+exr_float="\x02\x00"
+exr_uint="\x00\x00"
+exr_null="\x00"
+
+# ============================================
+# EXIF
+# ============================================
+exif_header="Exif\x00\x00"
+exif_gps_ifd="\x00\x12\x00\x03"
+exif_ifd_pointer="\x69\x87"
+exif_gps_pointer="\x25\x88"
+exif_interop="\x05\xa0"
+exif_makernote="\x27\x92"
+exif_orientation="\x12\x01"
+exif_datetime="\x32\x01"
+exif_exposure_time="\x9a\x82"
+exif_fnumber="\x9d\x82"
+
+# ============================================
+# ICC Color Profile
+# ============================================
+icc_profile_size="\x00\x00\x02\x30"
+icc_signature="acsp"
+icc_apple="APPL"
+icc_rgb="RGB "
+icc_cmyk="CMYK"
+icc_gray="GRAY"
+icc_xyz="XYZ "
+icc_curv="curv"
+icc_para="para"
+icc_desc="desc"
+icc_wtpt="wtpt"
+icc_bkpt="bkpt"
+icc_rXYZ="rXYZ"
+icc_gXYZ="gXYZ"
+icc_bXYZ="bXYZ"
+icc_rTRC="rTRC"
+icc_gTRC="gTRC"
+icc_bTRC="bTRC"
+icc_chad="chad"
+icc_a2b0="A2B0"
+icc_b2a0="B2A0"
+
+# ============================================
+# JBIG2
+# ============================================
+jbig2_magic="\x97\x4a\x42\x32\x0d\x0a\x1a\x0a"
+jbig2_seg_end="\x00\x00\x00\x00"
+
+# ============================================
+# KTX (Khronos Texture)
+# ============================================
+ktx_magic="\xab\x4b\x54\x58\x20\x31\x31\xbb\x0d\x0a\x1a\x0a"
+ktx2_magic="\xab\x4b\x54\x58\x20\x32\x30\xbb\x0d\x0a\x1a\x0a"
+ktx_short="\xab\x4b\x54\x58"
+ktx2_short="\xab\x4b\x54\x58\x20\x32"
+
+# ============================================
+# ICO / CUR
+# ============================================
+ico_magic="\x00\x00\x01\x00"
+cur_magic="\x00\x00\x02\x00"
+
+# ============================================
+# TGA (Targa)
+# ============================================
+tga_footer="TRUEVISION-XFILE.\x00"
+tga_uncompressed_rgb="\x02"
+tga_rle_rgb="\x0a"
+tga_uncompressed_gray="\x03"
+tga_rle_gray="\x0b"
+
+# ============================================
+# PBM / PGM / PPM / PAM (Netpbm)
+# ============================================
+pbm_p1="P1"
+pbm_p2="P2"
+pbm_p3="P3"
+pbm_p4="P4"
+pbm_p5="P5"
+pbm_p6="P6"
+pbm_p7="P7"
+
+# ============================================
+# ASTC (Adaptive Scalable Texture Compression)
+# ============================================
+astc_magic="\x13\xab\xa1\x5c"
+
+# ============================================
+# Apple ICNS
+# ============================================
+icns_magic="icns"
+icns_is32="is32"
+icns_il32="il32"
+icns_it32="it32"
+icns_ic07="ic07"
+icns_ic08="ic08"
+icns_ic09="ic09"
+icns_ic10="ic10"
+icns_ic11="ic11"
+icns_ic12="ic12"
+icns_ic13="ic13"
+icns_ic14="ic14"
+
+# ============================================
+# DDS (DirectDraw Surface)
+# ============================================
+dds_magic="DDS "
+dds_header_size="\x7c\x00\x00\x00"
+dds_dx10="DX10"
+
+# ============================================
+# PVR (PowerVR)
+# ============================================
+pvr3_magic="PVR\x03"
+pvr_v2_magic="\x21\x03\x04\x00"
+
+# ============================================
+# SVG (just enough to trigger ImageIO's SVG path)
+# ============================================
+svg_xml="<?xml"
+svg_open="<svg"
+svg_ns="xmlns=\"http://www.w3.org/2000/svg\""
+svg_width="width="
+svg_height="height="
+svg_viewbox="viewBox="
+svg_image="<image"
+svg_href="xlink:href="
+
+# ============================================
+# PDF (minimal for ImageIO PDF rendering)
+# ============================================
+pdf_magic="%PDF"
+pdf_magic_ver="%PDF-1."
+
+# ============================================
+# Interesting numeric values (trigger integer overflows)
+# ============================================
+int_zero_32="\x00\x00\x00\x00"
+int_one_32="\x01\x00\x00\x00"
+int_max_16="\xff\xff"
+int_max_32="\xff\xff\xff\xff"
+int_7fff="\xff\x7f"
+int_8000="\x00\x80"
+int_large="\x00\x00\x01\x00"
+int_neg1_16="\xff\xff"
+int_neg1_32="\xff\xff\xff\xff"
+int_0x7fffffff="\xff\xff\xff\x7f"
+int_0x80000000="\x00\x00\x00\x80"
