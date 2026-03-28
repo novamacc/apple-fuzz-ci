@@ -7,44 +7,35 @@ on:
     - cron: '0 */6 * * *'
   workflow_dispatch:
 
+env:
+  LLVM_BIN: /opt/homebrew/opt/llvm/bin
+
 jobs:
   fuzz-imageio-thumbnail:
     runs-on: macos-14
     timeout-minutes: 350
     steps:
       - uses: actions/checkout@v4
-      - name: Setup fuzzer toolchain
-        id: setup
+      - name: Setup
         run: |
-          echo "=== System clang ==="
-          clang --version
-          echo "=== Xcode path ==="
-          xcode-select -p
-          echo "=== Find libfuzzer ==="
-          find /Applications/Xcode* /Library/Developer -name 'libclang_rt.fuzzer_osx.a' 2>/dev/null || true
-          find /Applications/Xcode* /Library/Developer -name 'libclang_rt.fuzzer_*' 2>/dev/null || true
-          echo "=== Try Homebrew LLVM ==="
-          brew install llvm 2>&1 | tail -5
-          ls /opt/homebrew/opt/llvm/lib/clang/*/lib/darwin/libclang_rt.fuzzer_osx.a 2>/dev/null || true
-          echo "=== Homebrew clang version ==="
-          /opt/homebrew/opt/llvm/bin/clang --version 2>/dev/null || true
-      - name: Build harness
+          brew install llvm 2>&1 | tail -3
+          $LLVM_BIN/clang --version | head -1
+          # Verify lld exists
+          ls $LLVM_BIN/ld64.lld 2>/dev/null && echo "lld found" || echo "no lld"
+          ls $LLVM_BIN/ld.lld 2>/dev/null && echo "ld.lld found" || echo "no ld.lld"
+      - name: Build
         run: |
-          # Homebrew LLVM with its own linker (not Apple ld)
-          export PATH="/opt/homebrew/opt/llvm/bin:$PATH"
-          export LDFLAGS="-L/opt/homebrew/opt/llvm/lib -fuse-ld=lld"
-          clang -g -O1 -fsanitize=fuzzer,address,undefined \
-            -fuse-ld=lld \
+          $LLVM_BIN/clang -g -O1 -fsanitize=fuzzer,address,undefined \
+            -B$LLVM_BIN -fuse-ld=$LLVM_BIN/ld64.lld \
             -framework Foundation -framework ImageIO -framework CoreGraphics \
-            -o fuzz_imageio_thumbnail harnesses/imageio_thumbnail.m
+            -o fuzz harnesses/imageio_thumbnail.m
       - name: Fuzz (5 hours)
         run: |
           mkdir -p findings
-          ./fuzz_imageio_thumbnail \
-            -max_total_time=18000 -max_len=65536 -timeout=10 -rss_limit_mb=4096 \
+          ./fuzz -max_total_time=18000 -max_len=65536 -timeout=10 -rss_limit_mb=4096 \
             -dict=dictionaries/imageio.dict -artifact_prefix=findings/ \
             -print_final_stats=1 corpus/seeds/ 2>&1 | tee fuzz.log || true
-      - name: Upload crashes
+      - name: Upload
         if: always()
         uses: actions/upload-artifact@v4
         with:
@@ -59,12 +50,11 @@ jobs:
     timeout-minutes: 350
     steps:
       - uses: actions/checkout@v4
-      - name: Setup
-        run: brew install llvm 2>&1 | tail -3
+      - run: brew install llvm 2>&1 | tail -3
       - name: Build
         run: |
-          /opt/homebrew/opt/llvm/bin/clang -g -O1 -fsanitize=fuzzer,address,undefined \
-            -fuse-ld=lld \
+          $LLVM_BIN/clang -g -O1 -fsanitize=fuzzer,address,undefined \
+            -B$LLVM_BIN -fuse-ld=$LLVM_BIN/ld64.lld \
             -framework Foundation -framework ImageIO -framework CoreGraphics \
             -o fuzz harnesses/imageio_generic.m
       - name: Fuzz
@@ -88,12 +78,11 @@ jobs:
     timeout-minutes: 350
     steps:
       - uses: actions/checkout@v4
-      - name: Setup
-        run: brew install llvm 2>&1 | tail -3
+      - run: brew install llvm 2>&1 | tail -3
       - name: Build
         run: |
-          /opt/homebrew/opt/llvm/bin/clang -g -O1 -fsanitize=fuzzer,address,undefined \
-            -fuse-ld=lld \
+          $LLVM_BIN/clang -g -O1 -fsanitize=fuzzer,address,undefined \
+            -B$LLVM_BIN -fuse-ld=$LLVM_BIN/ld64.lld \
             -framework Foundation -framework ImageIO -framework CoreGraphics \
             -o fuzz harnesses/imageio_raw.m
       - name: Fuzz
@@ -117,12 +106,11 @@ jobs:
     timeout-minutes: 350
     steps:
       - uses: actions/checkout@v4
-      - name: Setup
-        run: brew install llvm 2>&1 | tail -3
+      - run: brew install llvm 2>&1 | tail -3
       - name: Build
         run: |
-          /opt/homebrew/opt/llvm/bin/clang -g -O1 -fsanitize=fuzzer,address,undefined \
-            -fuse-ld=lld \
+          $LLVM_BIN/clang -g -O1 -fsanitize=fuzzer,address,undefined \
+            -B$LLVM_BIN -fuse-ld=$LLVM_BIN/ld64.lld \
             -framework Foundation -framework CoreText -framework CoreGraphics \
             -o fuzz harnesses/coretext_font.m
       - name: Fuzz
@@ -146,12 +134,11 @@ jobs:
     timeout-minutes: 350
     steps:
       - uses: actions/checkout@v4
-      - name: Setup
-        run: brew install llvm 2>&1 | tail -3
+      - run: brew install llvm 2>&1 | tail -3
       - name: Build
         run: |
-          /opt/homebrew/opt/llvm/bin/clang -g -O1 -fsanitize=fuzzer,address,undefined \
-            -fuse-ld=lld \
+          $LLVM_BIN/clang -g -O1 -fsanitize=fuzzer,address,undefined \
+            -B$LLVM_BIN -fuse-ld=$LLVM_BIN/ld64.lld \
             -framework Foundation -framework AudioToolbox \
             -o fuzz harnesses/coreaudio_codec.m
       - name: Fuzz
@@ -175,12 +162,11 @@ jobs:
     timeout-minutes: 350
     steps:
       - uses: actions/checkout@v4
-      - name: Setup
-        run: brew install llvm 2>&1 | tail -3
+      - run: brew install llvm 2>&1 | tail -3
       - name: Build
         run: |
-          /opt/homebrew/opt/llvm/bin/clang -g -O1 -fsanitize=fuzzer,address,undefined \
-            -fuse-ld=lld \
+          $LLVM_BIN/clang -g -O1 -fsanitize=fuzzer,address,undefined \
+            -B$LLVM_BIN -fuse-ld=$LLVM_BIN/ld64.lld \
             -framework Foundation -framework CoreGraphics \
             -o fuzz harnesses/coregraphics_pdf.m
       - name: Fuzz
