@@ -7,27 +7,128 @@ on:
     - cron: '0 */6 * * *'
   workflow_dispatch:
 
+env:
+  CC: /opt/homebrew/opt/llvm/bin/clang
+  SANFLAGS: -g -O1 -fsanitize=fuzzer,address
+
 jobs:
   fuzz-imageio-thumbnail:
     runs-on: macos-14
     timeout-minutes: 350
     steps:
       - uses: actions/checkout@v4
-      - name: Setup LLVM
+      - run: brew install llvm 2>&1 | tail -3
+      - name: Build
+        run: $CC $SANFLAGS -framework Foundation -framework ImageIO -framework CoreGraphics -o fuzz harnesses/imageio_thumbnail.m
+      - name: Fuzz (5 hours)
         run: |
-          brew install llvm 2>&1 | tail -5
-          LLVM=/opt/homebrew/opt/llvm
-          echo "=== All clang_rt libs ==="
-          find $LLVM -name 'libclang_rt.*' -type f 2>/dev/null
-          echo "=== All fuzzer files ==="
-          find $LLVM -name '*fuzzer*' -type f 2>/dev/null
-          echo "=== Xcode clang_rt libs ==="
-          find /Applications/Xcode* -name 'libclang_rt.fuzzer*' -type f 2>/dev/null
-          find /Library/Developer -name 'libclang_rt.fuzzer*' -type f 2>/dev/null
-          echo "=== LLVM version ==="
-          $LLVM/bin/clang --version | head -2
-          echo "=== Try direct compile+link in one step ==="
-          echo 'int LLVMFuzzerTestOneInput(const unsigned char *d, long s) { return 0; }' > /tmp/test.c
-          $LLVM/bin/clang -fsanitize=fuzzer,address -o /tmp/test_fuzz /tmp/test.c 2>&1 && echo "DIRECT BUILD WORKS" || echo "DIRECT BUILD FAILED"
-          echo "=== Try xcrun clang ==="
-          xcrun clang --version | head -2
+          mkdir -p findings
+          ./fuzz -max_total_time=18000 -max_len=65536 -timeout=10 -rss_limit_mb=4096 -dict=dictionaries/imageio.dict -artifact_prefix=findings/ -print_final_stats=1 corpus/seeds/ 2>&1 | tee fuzz.log || true
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: thumbnail-${{ github.run_number }}
+          path: |
+            findings/
+            fuzz.log
+          if-no-files-found: ignore
+
+  fuzz-imageio-generic:
+    runs-on: macos-14
+    timeout-minutes: 350
+    steps:
+      - uses: actions/checkout@v4
+      - run: brew install llvm 2>&1 | tail -3
+      - run: $CC $SANFLAGS -framework Foundation -framework ImageIO -framework CoreGraphics -o fuzz harnesses/imageio_generic.m
+      - name: Fuzz
+        run: |
+          mkdir -p findings
+          ./fuzz -max_total_time=18000 -max_len=65536 -timeout=10 -rss_limit_mb=4096 -dict=dictionaries/imageio.dict -artifact_prefix=findings/ -print_final_stats=1 corpus/seeds/ 2>&1 | tee fuzz.log || true
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: generic-${{ github.run_number }}
+          path: |
+            findings/
+            fuzz.log
+          if-no-files-found: ignore
+
+  fuzz-imageio-raw:
+    runs-on: macos-14
+    timeout-minutes: 350
+    steps:
+      - uses: actions/checkout@v4
+      - run: brew install llvm 2>&1 | tail -3
+      - run: $CC $SANFLAGS -framework Foundation -framework ImageIO -framework CoreGraphics -o fuzz harnesses/imageio_raw.m
+      - name: Fuzz
+        run: |
+          mkdir -p findings
+          ./fuzz -max_total_time=18000 -max_len=65536 -timeout=10 -rss_limit_mb=4096 -dict=dictionaries/imageio.dict -artifact_prefix=findings/ -print_final_stats=1 corpus/seeds/ 2>&1 | tee fuzz.log || true
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: raw-${{ github.run_number }}
+          path: |
+            findings/
+            fuzz.log
+          if-no-files-found: ignore
+
+  fuzz-coretext-font:
+    runs-on: macos-14
+    timeout-minutes: 350
+    steps:
+      - uses: actions/checkout@v4
+      - run: brew install llvm 2>&1 | tail -3
+      - run: $CC $SANFLAGS -framework Foundation -framework CoreText -framework CoreGraphics -o fuzz harnesses/coretext_font.m
+      - name: Fuzz
+        run: |
+          mkdir -p findings
+          ./fuzz -max_total_time=18000 -max_len=32768 -timeout=10 -rss_limit_mb=4096 -dict=dictionaries/font.dict -artifact_prefix=findings/ -print_final_stats=1 corpus/seeds/ 2>&1 | tee fuzz.log || true
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: font-${{ github.run_number }}
+          path: |
+            findings/
+            fuzz.log
+          if-no-files-found: ignore
+
+  fuzz-coreaudio-codec:
+    runs-on: macos-14
+    timeout-minutes: 350
+    steps:
+      - uses: actions/checkout@v4
+      - run: brew install llvm 2>&1 | tail -3
+      - run: $CC $SANFLAGS -framework Foundation -framework AudioToolbox -o fuzz harnesses/coreaudio_codec.m
+      - name: Fuzz
+        run: |
+          mkdir -p findings
+          ./fuzz -max_total_time=18000 -max_len=8192 -timeout=10 -rss_limit_mb=4096 -dict=dictionaries/audio.dict -artifact_prefix=findings/ -print_final_stats=1 corpus/seeds/ 2>&1 | tee fuzz.log || true
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: audio-${{ github.run_number }}
+          path: |
+            findings/
+            fuzz.log
+          if-no-files-found: ignore
+
+  fuzz-coregraphics-pdf:
+    runs-on: macos-14
+    timeout-minutes: 350
+    steps:
+      - uses: actions/checkout@v4
+      - run: brew install llvm 2>&1 | tail -3
+      - run: $CC $SANFLAGS -framework Foundation -framework CoreGraphics -o fuzz harnesses/coregraphics_pdf.m
+      - name: Fuzz
+        run: |
+          mkdir -p findings
+          ./fuzz -max_total_time=18000 -max_len=65536 -timeout=10 -rss_limit_mb=4096 -dict=dictionaries/pdf.dict -artifact_prefix=findings/ -print_final_stats=1 corpus/seeds/ 2>&1 | tee fuzz.log || true
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: pdf-${{ github.run_number }}
+          path: |
+            findings/
+            fuzz.log
+          if-no-files-found: ignore
